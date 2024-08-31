@@ -31,7 +31,6 @@ DOOR_STATUS_ERROR = 3
 current_door_status = DOOR_STATUS_UNKNOWN
 last_door_status = DOOR_STATUS_UNKNOWN
 
-
 # Create MQTT connection
 mqtt_connection = mqtt_connection_builder.mtls_from_path(
     endpoint=endpoint,
@@ -58,7 +57,7 @@ def init_sensors_gpio():
     logger.info("Sensors initialized on GPIO pins %d and %d", LEFT_SENSOR_GPIO, RIGHT_SENSOR_GPIO)
 
 
-def gpio_isr_handler():
+def gpio_isr_handler(channel):
     """ISR handler for GPIO interrupts."""
     global current_door_status
     current_door_status = read_door_status()
@@ -71,7 +70,7 @@ def read_door_status():
     right_sensor_value = GPIO.input(RIGHT_SENSOR_GPIO)
 
     if left_sensor_value == right_sensor_value:
-        logger.error("Left/right sensor values match")
+        logger.info("Left/right sensor values match")
         return DOOR_STATUS_CLOSED if left_sensor_value else DOOR_STATUS_OPEN
     else:
         logger.error("Left and right sensor values do not match!")
@@ -104,6 +103,8 @@ def status_timer_callback():
     if current_door_status != last_door_status:
         publish_door_status(current_door_status)
         last_door_status = current_door_status
+    # Restart the timer to keep it recurring
+    init_status_timer(60)
 
 def init_status_timer(transmit_interval_seconds):
     """Initialize the status timer."""
@@ -135,6 +136,7 @@ def main():
         if status_timer is not None:
             print("Cancelling status timer!")
             status_timer.cancel()
+        GPIO.cleanup()
         print("Disconnecting...")
         disconnect_future = mqtt_connection.disconnect()
         disconnect_future.result()
