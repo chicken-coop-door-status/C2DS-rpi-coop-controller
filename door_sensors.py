@@ -5,6 +5,9 @@ import logging
 from threading import Timer
 from awscrt import mqtt
 from awsiot import mqtt_connection_builder
+import RgbLedManager
+from awsiot import mqtt5_client_builder
+from awscrt import mqtt5, http
 
 # Replace with your endpoint and credentials
 endpoint = "ay1nsbhuqfhzk-ats.iot.us-east-2.amazonaws.com"
@@ -12,15 +15,24 @@ cert_filepath = "/greengrass/v2/thingCert.crt"
 key_filepath = "/greengrass/v2/privKey.key"
 ca_filepath = "/greengrass/v2/rootCA.pem"
 client_id = "coop-monitor"
-topic = "farm/coop/door/status"
+
+MQTT_COOP_STATUS_TOPIC = "farm/coop/door/status"
+MQTT_LED_COLOR_TOPIC = "farm/coop/led/color"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DoorSensors")
 
+TIMEOUT = 100
+
 # GPIO pin definitions for the sensors
 LEFT_SENSOR_GPIO = 18  
 RIGHT_SENSOR_GPIO = 23 
+
+# GPIO pins for RGB LED
+RGB_LED_RED_GPIO = 21
+RGB_LED_GREEN_GPIO = 20
+RGB_LED_BLUE_GPIO = 16
 
 # Enum to define door status
 DOOR_STATUS_UNKNOWN = 0
@@ -44,6 +56,8 @@ mqtt_connection = mqtt_connection_builder.mtls_from_path(
     clean_session=False,
     keep_alive_secs=30
 )
+
+led_manager = RgbLedManager.RgbLedManager(red_pin=RGB_LED_RED_GPIO, green_pin=RGB_LED_GREEN_GPIO, blue_pin=RGB_LED_BLUE_GPIO)
 
 def init_sensors_gpio():
     """Initialize the GPIO pins for the sensors."""
@@ -87,9 +101,9 @@ def publish_door_status(status):
     }.get(status, "UNKNOWN")
 
     message = json.dumps({"door": status_str})
-    logger.info("Publishing door status: %s to topic %s", message, topic)
+    logger.info("Publishing door status: %s to topic %s", message, MQTT_COOP_STATUS_TOPIC)
     mqtt_connection.publish(
-        topic=topic,
+        topic=MQTT_COOP_STATUS_TOPIC,
         payload=message,
         qos=mqtt.QoS.AT_LEAST_ONCE
     )
@@ -118,12 +132,34 @@ def init_door_sensors(transmit_interval_seconds):
     init_sensors_gpio()
     init_status_timer(transmit_interval_seconds)
 
+def on_message_received(topic, payload, **kwargs):
+    """Callback when a message is received from the MQTT broker."""
+    try:
+        message = json.loads(payload)
+        color_name = message.get("LED")
+        if color_name:
+            logger.info("Received color command: %s", color_name)
+            led_manager.set_led_named_color(color_name)
+        else:
+            logger.warning("No 'color' key in the received message payload")
+    except json.JSONDecodeError as e:
+        logger.error("Failed to decode JSON payload: %s", e)
+
 def main():
     """Main function to initialize the system and start the MQTT loop."""
     print("Connecting to {}...".format(endpoint))
     connect_future = mqtt_connection.connect()
     connect_future.result()
     print("Connected!")
+
+    print("Subscribing to topic '{}'...".format(MQTT_LED_COLOR_TOPIC))
+    subscribe_future, packet_id = mqtt_connection.subscribe(
+        topic=MQTT_LED_COLOR_TOPIC,
+        qos=mqtt.QoS.AT_LEAST_ONCE,
+        callback=on_message_received
+    )
+    subscribe_future.result()
+    print("Subscribed successfully!")
 
     init_door_sensors(60)  # Check every 60 seconds
 
