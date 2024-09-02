@@ -158,6 +158,8 @@ def main():
     print("Subscribed successfully!")
 
     init_door_sensors(60)  # Check every 60 seconds
+    current_door_status = read_door_status()
+    publish_door_status(current_door_status)
 
     try:
         while True:
