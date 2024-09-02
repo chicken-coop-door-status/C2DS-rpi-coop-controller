@@ -25,6 +25,9 @@ logger = logging.getLogger("DoorSensors")
 
 TIMEOUT = 100
 
+# How often do we check door status?
+SENSOR_CHECK_INTERVAL_SECONDS = 60 * 60  # One hour 
+
 # GPIO pin definitions for the sensors
 LEFT_SENSOR_GPIO = 18  
 RIGHT_SENSOR_GPIO = 23 
@@ -75,6 +78,7 @@ def gpio_isr_handler(channel):
     """ISR handler for GPIO interrupts."""
     global current_door_status
     current_door_status = read_door_status()
+    logger.info(f'Read door status: {current_door_status}')
     publish_door_status(current_door_status)
 
 
@@ -112,9 +116,10 @@ def publish_door_status(status):
 def status_timer_callback():
     """Timer callback function to read the door status and publish if it has changed."""
     logger.info("Timer callback - Checking door status and publishing to MQTT")
+    current_door_status = read_door_status()
     publish_door_status(current_door_status)
     # Restart the timer to keep it recurring
-    init_status_timer(60)
+    init_status_timer(SENSOR_CHECK_INTERVAL_SECONDS)
 
 def init_status_timer(transmit_interval_seconds):
     """Initialize the status timer."""
@@ -157,7 +162,7 @@ def main():
     subscribe_future.result()
     print("Subscribed successfully!")
 
-    init_door_sensors(60)  # Check every 60 seconds
+    init_door_sensors(SENSOR_CHECK_INTERVAL_SECONDS)
     current_door_status = read_door_status()
     publish_door_status(current_door_status)
 
