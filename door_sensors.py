@@ -7,7 +7,6 @@ from awscrt import mqtt
 from awsiot import mqtt_connection_builder
 import RgbLedManager
 from awsiot import mqtt5_client_builder
-from awscrt import mqtt5, http
 
 # Replace with your endpoint and credentials
 endpoint = "ay1nsbhuqfhzk-ats.iot.us-east-2.amazonaws.com"
@@ -83,16 +82,24 @@ def gpio_isr_handler(channel):
 
 
 def read_door_status():
-    """Read the door status from the sensors."""
-    left_sensor_value = GPIO.input(LEFT_SENSOR_GPIO)
-    right_sensor_value = GPIO.input(RIGHT_SENSOR_GPIO)
+    """Read the door status from the sensors, retrying up to 10 times if necessary."""
+    max_attempts = 10
+    attempt = 0
 
-    if left_sensor_value == right_sensor_value:
-        logger.info("Left/right sensor values match")
-        return DOOR_STATUS_CLOSED if left_sensor_value else DOOR_STATUS_OPEN
-    else:
-        logger.error("Left and right sensor values do not match!")
-        return DOOR_STATUS_ERROR
+    while attempt < max_attempts:
+        left_sensor_value = GPIO.input(LEFT_SENSOR_GPIO)
+        right_sensor_value = GPIO.input(RIGHT_SENSOR_GPIO)
+
+        if left_sensor_value == right_sensor_value:
+            logger.info("Left/right sensor values match on attempt %d", attempt + 1)
+            return DOOR_STATUS_CLOSED if left_sensor_value else DOOR_STATUS_OPEN
+        else:
+            logger.warning("Left and right sensor values do not match on attempt %d", attempt + 1)
+            attempt += 1
+            time.sleep(1)  # Pause for 1 second before trying again
+
+    logger.error("Left and right sensor values did not match after %d attempts!", max_attempts)
+    return DOOR_STATUS_ERROR
 
 
 def publish_door_status(status):
