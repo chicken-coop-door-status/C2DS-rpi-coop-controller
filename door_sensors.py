@@ -111,12 +111,8 @@ def publish_door_status(status):
 
 def status_timer_callback():
     """Timer callback function to read the door status and publish if it has changed."""
-    global current_door_status, last_door_status
     logger.info("Timer callback - Checking door status and publishing to MQTT")
-    current_door_status = read_door_status()
-    if current_door_status != last_door_status:
-        publish_door_status(current_door_status)
-        last_door_status = current_door_status
+    publish_door_status(current_door_status)
     # Restart the timer to keep it recurring
     init_status_timer(60)
 
