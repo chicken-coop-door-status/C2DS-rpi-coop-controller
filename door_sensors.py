@@ -19,10 +19,6 @@ client_id = "coop-monitor"
 MQTT_COOP_STATUS_TOPIC = "farm/coop/door/status"
 MQTT_LED_COLOR_TOPIC = "farm/coop/led/color"
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("DoorSensors")
-
 # Set up the logger
 logger = setup_local_time_logger()
 
