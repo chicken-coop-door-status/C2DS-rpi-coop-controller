@@ -8,6 +8,7 @@ from awsiot import mqtt_connection_builder
 import RgbLedManager
 from awsiot import mqtt5_client_builder
 from LocalTimeLogger import setup_local_time_logger
+from ModemInitializer import ModemInitializer 
 
 # Replace with your endpoint and credentials
 endpoint = "ay1nsbhuqfhzk-ats.iot.us-east-2.amazonaws.com"
@@ -189,4 +190,8 @@ def main():
         logger.info("Disconnected!")
 
 if __name__ == "__main__":
-    main()
+    modem_initializer = ModemInitializer(port='/dev/ttyUSB2')
+    if modem_initializer.connect_ecm():
+        main()
+    else:
+        logger.error("Could not connect to ECM!")

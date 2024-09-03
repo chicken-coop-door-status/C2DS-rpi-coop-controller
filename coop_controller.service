@@ -1,0 +1,16 @@
+[Unit]
+Description=Chicken Coop Controller Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/tennis/c2ds-rpi-coop-controller/venv/bin/python door_sensors.py 
+WorkingDirectory=/home/tennis/c2ds-rpi-coop-controller
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+Environment="PATH=/home/tennis/c2ds-rpi-coop-controller/venv/bin"
+
+[Install]
+WantedBy=multi-user.target
