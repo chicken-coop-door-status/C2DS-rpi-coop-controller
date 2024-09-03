@@ -7,6 +7,7 @@ from awscrt import mqtt
 from awsiot import mqtt_connection_builder
 import RgbLedManager
 from awsiot import mqtt5_client_builder
+from LocalTimeLogger import setup_local_time_logger
 
 # Replace with your endpoint and credentials
 endpoint = "ay1nsbhuqfhzk-ats.iot.us-east-2.amazonaws.com"
@@ -21,6 +22,9 @@ MQTT_LED_COLOR_TOPIC = "farm/coop/led/color"
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DoorSensors")
+
+# Set up the logger
+logger = setup_local_time_logger()
 
 TIMEOUT = 100
 
@@ -118,7 +122,7 @@ def publish_door_status(status):
         payload=message,
         qos=mqtt.QoS.AT_LEAST_ONCE
     )
-    print("Message published!")
+    logger.info("Message published!")
 
 def status_timer_callback():
     """Timer callback function to read the door status and publish if it has changed."""
@@ -155,19 +159,19 @@ def on_message_received(topic, payload, **kwargs):
 
 def main():
     """Main function to initialize the system and start the MQTT loop."""
-    print("Connecting to {}...".format(endpoint))
+    logger.info("Connecting to {}...".format(endpoint))
     connect_future = mqtt_connection.connect()
     connect_future.result()
-    print("Connected!")
+    logger.info("Connected!")
 
-    print("Subscribing to topic '{}'...".format(MQTT_LED_COLOR_TOPIC))
+    logger.info("Subscribing to topic '{}'...".format(MQTT_LED_COLOR_TOPIC))
     subscribe_future, packet_id = mqtt_connection.subscribe(
         topic=MQTT_LED_COLOR_TOPIC,
         qos=mqtt.QoS.AT_LEAST_ONCE,
         callback=on_message_received
     )
     subscribe_future.result()
-    print("Subscribed successfully!")
+    logger.info("Subscribed successfully!")
 
     init_door_sensors(SENSOR_CHECK_INTERVAL_SECONDS)
     current_door_status = read_door_status()
@@ -180,13 +184,13 @@ def main():
         logger.info("Shutting down")
     finally:
         if status_timer is not None:
-            print("Cancelling status timer!")
+            logger.info("Cancelling status timer!")
             status_timer.cancel()
         GPIO.cleanup()
-        print("Disconnecting...")
+        logger.info("Disconnecting...")
         disconnect_future = mqtt_connection.disconnect()
         disconnect_future.result()
-        print("Disconnected!")
+        logger.info("Disconnected!")
 
 if __name__ == "__main__":
     main()
