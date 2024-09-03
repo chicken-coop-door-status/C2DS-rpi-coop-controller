@@ -25,7 +25,7 @@ logger = logging.getLogger("DoorSensors")
 TIMEOUT = 100
 
 # How often do we check door status?
-SENSOR_CHECK_INTERVAL_SECONDS = 60 * 60  # One hour 
+SENSOR_CHECK_INTERVAL_SECONDS = 60 * 60 * 1  # One hour 
 
 # GPIO pin definitions for the sensors
 LEFT_SENSOR_GPIO = 18  
