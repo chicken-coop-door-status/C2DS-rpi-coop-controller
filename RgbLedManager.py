@@ -1,6 +1,7 @@
-import RPi.GPIO as GPIO
 import threading
 import time
+
+import RPi.GPIO as GPIO
 
 
 class RgbLedManager:
@@ -45,13 +46,13 @@ class RgbLedManager:
             "LED_CYAN": (0, 8192, 8192, self.LED_STATE_SOLID, 0),
             "LED_MAGENTA": (8192, 0, 8192, self.LED_STATE_SOLID, 0),
             "LED_WHITE": (8192, 8192, 8192, self.LED_STATE_SOLID, 0),
-            "LED_FLASHING_RED": (8192, 0, 0, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_GREEN": (0, 8192, 0, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_BLUE": (0, 0, 8192, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_YELLOW": (8192, 8192, 0, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_CYAN": (0, 8192, 8192, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_MAGENTA": (8192, 0, 8192, self.LED_STATE_BLINK, 500),
-            "LED_FLASHING_WHITE": (8192, 8192, 8192, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_RED": (8192, 0, 0, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_GREEN": (0, 8192, 0, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_BLUE": (0, 0, 8192, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_YELLOW": (8192, 8192, 0, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_CYAN": (0, 8192, 8192, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_MAGENTA": (8192, 0, 8192, self.LED_STATE_BLINK, 500),
+            "LED_BLINK_WHITE": (8192, 8192, 8192, self.LED_STATE_BLINK, 500),
             "LED_PULSE_RED": (8192, 0, 0, self.LED_STATE_PULSE, 10),
             "LED_PULSE_GREEN": (0, 8192, 0, self.LED_STATE_PULSE, 10),
             "LED_PULSE_BLUE": (0, 0, 8192, self.LED_STATE_PULSE, 10),
